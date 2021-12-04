@@ -1,0 +1,224 @@
+---
+title: "step e"
+author: "Caitlyn Barrett"
+date: "11/24/2021"
+output:
+  pdf_document: default
+  word_document: default
+  html_document: default
+---
+Step E
+For this section of the project, you will submit a knitted version of your .Rmd file to Canvas. This is intended to be a draft of your data analysis and a graph representing your data. While it does not have to be complete, it must be complete enough for me to see that you have started and for you to identify any problems that we need to address for you to successfully complete the project. 
+
+Grading Criteria for Step E
+Submitted a knitted .Rmd file: students submitted a knitted .Rmd file with NO hidden code (5 pts) 
+```{r}
+tinytex::install_tinytex()
+```
+
+Data were cleaned appropriately: Data were cleaned to allow students to conduct analyses and to create a visual of the data (5 pts) 
+##create a subset of data, using V (should be column name)
+##V202065=party reg
+Dr. Anthony Fauci [THERMPO_THFAUCI] V202158
+Feminists [THERMGR_THGRFEM] V202160
+Gay Men and Lesbians [THERMGR_THGRGAY] V202166
+Muslims [THERMGR_THGRMUSL] V202168
+Police [THERMGR_POLICE] V202171
+Transgender People [THERMGR_TRANS] V202172
+Scientists [THERMGR_SCIENT] V202173
+Black Lives Matter [THERMGR_BLM] V202174
+National Rifle Association [THERMGR_NRA] V202178
+Immigration and Customs Enforcement (ICE) [THERMGR_ICE] V202182
+#MeToo [THERMGR_METOO] V202183
+Planned Parenthood [THERMGR_PLANPARENT] V202185
+World Health Organization [THERMGR_WHO] V202186
+Centers for Disease Control [THERMGR_CDC] V202187
+Big Business [THERMGR_THGRBIGB ] V202163
+```{r}
+library(tidyr)
+library(dplyr)
+library(dbplyr)
+library(effsize)
+##read csv file from anes website
+anes<-read.csv("anes_timeseries_2020_csv_20210719.csv")
+V##subset data from dataset (variables listed above)
+anessub<-subset(anes,"V202065x"==1|2, select=c("V200001", "V202065x", "V202158", "V202160", "V202166", "V202168", "V202171", "V202172", "V202173", "V202174", "V202178", "V202182", "V202183", "V202185", "V202186", "V202187", "V202163"))
+##rename columns!
+colnames(anessub)<-c("subject", "party", "fauci", "feminist", "gaymenles", "muslims", "police", "transgender", "scientists", "blm", "nra", "ice", "metoo", "planparent", "who", "cdc", "bigbusiness")
+##subset registered democrats and republicans
+anesf<- anessub %>% filter(1==anessub$party|2==anessub$party)
+##make long dataset just in case!
+anes_longer<-pivot_longer(anesf, cols=c("fauci", "feminist", "gaymenles", "muslims", "police", "transgender", "scientists", "blm", "nra", "ice", "metoo", "planparent", "who", "cdc", "bigbusiness"), names_to="topic", values_to="temprating")
+##999 is unrecognized and 998 is don't know, -9 is refused, -7 no data, -6 no interview, -5 interview breakoff, -4 techincal error. should make those NA. with a bit of google, I have determined the best route to do this is using function replace_with_na due to the variety of other responses 
+library(naniar)
+anes_longer<-anes_longer %>% replace_with_na(replace=list(temprating=c(999, 998, -9, -8, -7, -6, -5, -4)))
+##now to try with the wide data
+anesf<-anesf %>% replace_with_na(replace=list(fauci=c(999, 998, -9, -8, -7, -6, -5, -4)))
+anesf<-anesf %>%replace_with_na(replace=list(feminist=c(999, 998, -9, -8, -7, -6, -5, -4)))
+anesf<-anesf %>%replace_with_na(replace=list(gaymenles=c(999, 998, -9, -8, -7, -6, -5, -4)))
+anesf<-anesf %>%replace_with_na(replace=list(muslims=c(999, 998, -9, -8, -7, -6, -5, -4)))
+anesf<-anesf %>%replace_with_na(replace=list(police=c(999, 998, -9, -8, -7, -6, -5, -4)))
+anesf<-anesf %>%replace_with_na(replace=list(transgender=c(999, 998, -9, -8, -7, -6, -5, -4)))
+anesf<-anesf %>%replace_with_na(replace=list(scientists=c(999, 998, -9, -8, -7, -6, -5, -4)))
+anesf<-anesf %>%replace_with_na(replace=list(blm=c(999, 998, -9, -8, -7, -6, -5, -4)))
+anesf<-anesf %>%replace_with_na(replace=list(nra=c(999, 998, -9, -8, -7, -6, -5, -4)))
+anesf<-anesf %>%replace_with_na(replace=list(ice=c(999, 998, -9, -8, -7, -6, -5, -4)))
+anesf<-anesf %>%replace_with_na(replace=list(metoo=c(999, 998, -9, -8, -7, -6, -5, -4)))
+anesf<-anesf %>%replace_with_na(replace=list(planparent=c(999, 998, -9, -8, -7, -6, -5, -4)))
+anesf<-anesf %>%replace_with_na(replace=list(who=c(999, 998, -9, -8, -7, -6, -5, -4)))
+anesf<-anesf %>%replace_with_na(replace=list(cdc=c(999, 998, -9, -8, -7, -6, -5, -4)))
+anesf<-anesf %>%replace_with_na(replace=list(bigbusiness=c(999, 998, -9, -8, -7, -6, -5, -4)))
+##to double check whether all the code above work, use summary to check min and max!
+summary(anesf)
+```
+
+
+Analyses were attempted: There were clear attempts to complete the analyses. If analyses are not complete, next steps are clearly identified in the document and the student has a plan to finalize analysis by Step F (5 pts) 
+
+##1 (demo) is greater than 2 (repub) - greater
+##1 (demo) is less than 2 (repub) - less
+##HYP: D higher than R
+
+```{r}
+##This tests how Dem Vs. Rep feel about Dr. Anthony Fauci, the Chief Medical Advisor to the President.
+t.test(anesf$fauci~anesf$party, alternative="greater")
+?cohen.d
+cohen.d(anesf$fauci~anesf$party)
+##results: democrats significantly feel more favorable of Dr. Fauci more than republicans
+```
+
+```{r}
+##This tests how dem vs. rep feel about Feminists
+t.test(anesf$feminist~anesf$party, alternative="greater")
+cohen.d(anesf$feminist~anesf$party)
+##democrats significantly feel more favorable towards feminists than republicans
+##large effect
+```
+
+```{r}
+##This tests how dem vs. rep feel about Gay Men and Lesbians
+t.test(anesf$gaymenles~anesf$party, alternative="greater")
+cohen.d(anesf$gaymenles~anesf$party)
+##democrats feel significantly more favorable towards gay men and lesbians than republicans
+##large effect
+```
+
+```{r}
+##This tests how dem vs. rep feel about Muslims
+t.test(anesf$muslims~anesf$party, alternative="greater")
+cohen.d(anesf$muslims~anesf$party)
+##democrats feel significantly more favorable towards muslims than republicans feel 
+##large
+```
+
+```{r}
+##This tests how dem vs. rep feel about Transgender people
+t.test(anesf$transgender~anesf$party, alternative="greater")
+cohen.d(anesf$transgender~anesf$party)
+##democrats feel more favorable towards transgender people than republicans do
+##large effect
+```
+
+```{r}
+##This tests how dem vs. rep feel about Scientists
+t.test(anesf$scientists~anesf$party, alternative="greater")
+cohen.d(anesf$scientists~anesf$party)
+##democrats feel significantly more favorable (closer percentages though) towards scientists than republicans do. 
+##medium effect
+```
+
+```{r}
+##This tests how dem vs. rep feel about the Black Lives Matter movement
+t.test(anesf$blm~anesf$party, alternative="greater")
+cohen.d(anesf$blm~anesf$party)
+##democrats feel much more and significantly more favorable towards black lives matter than republicans do
+##large effect
+```
+
+```{r}
+##This tests how dem vs. rep feel about the #MeToo movement (it is about the rape culture and frequency of sexual assault)
+t.test(anesf$metoo~anesf$party, alternative="greater")
+##democrats feel much more and significantly more favorable towards #metoo than republicans do
+cohen.d(anesf$metoo~anesf$party)
+##large effect
+```
+
+```{r}
+##This tests how dem vs. rep feel about the Planned Parenthood organization (company that provides reproductive medical care)
+t.test(anesf$planparent~anesf$party, alternative="greater")
+##democrats feel much more and significantly more favorable towards planned parenthood than republicans do
+cohen.d(anesf$planparent~anesf$party)
+##large effect
+```
+
+```{r}
+##This tests how dem vs. rep feel about the World Health Organization (an international organization with the focus of improving health across the globe)
+t.test(anesf$who~anesf$party, alternative="greater")
+##democrats feel much more and significantly more favorable towards world health organization than republicans do
+cohen.d(anesf$who~anesf$party)
+##large effect
+```
+
+```{r}
+##This tests how dem vs. rep feel about the Centers for Disease Control, the primary disease prevention organization within th eUnited States. 
+t.test(anesf$cdc~anesf$party, alternative="greater")
+##democrats feel much more and significantly more favorable towards the centers for disease control than republicans do
+cohen.d(anesf$cdc~anesf$party)
+##medium effect
+```
+##HYP: R higher than D
+```{r}
+##This tests how dem vs. rep feel about the National Rifle Assication, an organization aimed to protect the second amendment/gun rights.
+t.test(anesf$nra~anesf$party, alternative="less")
+##republicans favor the NRA significantly more than democrats do
+cohen.d(anesf$nra~anesf$party)
+##large effect
+```
+
+```{r}
+##This tests how dem vs. rep feel about Immigration and Customs Enforcement, the primary organization within the United States responsible for immigration enforcement
+t.test(anesf$ice~anesf$party, alternative="less")
+##republicans favor ICE significantly more than democrats do
+cohen.d(anesf$ice~anesf$party)
+##large effect
+```
+
+```{r}
+##This tests how dem vs. rep feel about "Big Business" which is defined as an economic group consisting of large profit-making corporations especially with regard to their influence on social or political policy
+t.test(anesf$bigbusiness~anesf$party, alternative="less")
+cohen.d(anesf$bigbusiness~anesf$party)
+##republicans favor big business significantly more than democrats do (closer percentage)
+```
+
+```{r}
+##This tests how dem vs. rep feel about the police, law enforcement.
+t.test(anesf$police~anesf$party, alternative="less")
+##republicans favor police significantly more than democrats do
+cohen.d(anesf$police~anesf$party)
+##large effect
+```
+
+Visual was attempted: There were clear attempts to create a visual. If analyses are not complete, next steps are clearly identified in the document and the student has a plan to finalize analysis by Step F (5 pts) 
+```{r}
+library(ggplot2)
+library(Rmisc)
+##renaming values so instead of 1 and 2, it will be democrat and republican, respectively.
+anes_longer$party<-ifelse(anes_longer$party==1, "Democrat", "Republican")
+##Want to change labels of facet wraps to make them cleaner, rather than the names used in the analysis 
+class(anes_longer$topic)
+anes_longer$topic<-as.factor(anes_longer$topic)
+levels(anes_longer$topic)<-c("Big Business","Black Lives Matter","Centers for Disease Control", "Dr. Anthony Fauci", "Feminists", "Gay Men and Lesbians", "Immigration and Customs Enforcement", "#MeToo", "Muslims", "National Rifle Association", "Planned Parenthood", "Police", "Scientists", "Transgender", "World Health Organization")
+##Do same with columns
+colnames(anes_longer)<-c("Subject", "Party", "Topic", "Temprating")
+##need to make a summary se for bars to appear on graph
+barplot<-summarySE(anes_longer, measurevar="Temprating", groupvars=c("Party","Topic"), na.rm=TRUE)
+##graph/barplot visualization of data!
+ggplot(barplot, aes(x=Party, y=Temprating, fill=Party))+geom_bar(stat="identity")+geom_errorbar(aes(ymin = Temprating-se, ymax = Temprating+se))+scale_fill_manual(values=c("lightblue", "lightcoral"))+xlab(label="")+ylab(label="Thermometer Rating")+facet_wrap(~Topic)+theme_light()
+
+boxplott<-ggplot(anes_longer, aes(x=Party, y=Temprating, fill=Party))+geom_boxplot()+scale_fill_manual(values=c("lightblue", "lightcoral"))+xlab(label="")+ylab(label="Thermometer Rating")+facet_wrap(~Topic, nrow=5)+theme_classic()
+```
+save boxplott to comp
+```{r}
+ggsave("boxplot.tiff", dpi = 300, width = 9, height = 6, units="in")
+```
+
